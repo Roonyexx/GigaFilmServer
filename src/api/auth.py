@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
-from schemas.user import UserCreate
-from db.crud.user import *
-from db.database import *
+from src.schemas.user import UserCreate
+from src.db.crud.user import *
+from src.db.database import *
 
 router = APIRouter()
 

@@ -1,6 +1,6 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
-from schemas.user import UserCreate
+from src.schemas.user import UserCreate
 from sqlalchemy import text
 from sqlalchemy.exc import *
 
