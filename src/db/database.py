@@ -1,14 +1,24 @@
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, declarative_base
-from src.schemas.user import UserCreate
-from sqlalchemy import text
-from sqlalchemy.exc import *
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
+from sqlalchemy.orm import DeclarativeBase
 
 
-SQLALCHEMY_DATABASE_URL = "postgresql://postgres:1@localhost/GigaFilm"
-engine = create_engine(SQLALCHEMY_DATABASE_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-Base = declarative_base()
+
+SQLALCHEMY_DATABASE_URL = "postgresql+asyncpg://postgres:1@localhost/GigaFilm"
+engine = create_async_engine(SQLALCHEMY_DATABASE_URL)
+SessionLocal = async_sessionmaker(engine, expire_on_commit=False)
+
+async def getSession():
+    async with SessionLocal() as session:
+        yield session
+
+
+class Base(DeclarativeBase):
+    pass
+
+
+
+
+
 
 
 
