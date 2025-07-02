@@ -6,15 +6,18 @@ from sqlalchemy import UUID
 
 
 class FilmStatusBase(BaseModel):
-    user_score: Optional[Decimal] = None
-
-
-class FilmStatusCreate(FilmStatusBase):
+    user_token: str
     film_id: int
+
+
+class FilmStatusSet(FilmStatusBase):
     status_id: int
+
+class FilmScoreSet(FilmStatusBase):
+    user_score: float
 
 
 class FilmStatusRead(FilmStatusBase):
     status_id: int
-    id: UUID
+    user_id: str
     film_id: int

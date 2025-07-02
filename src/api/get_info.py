@@ -3,6 +3,7 @@ from src.api.depends import SessionDep
 from src.db.crud.film import *
 from src.schemas.user import UserWithToken
 from src.core import security 
+
 router = APIRouter()
 
 
@@ -15,5 +16,7 @@ async def filmGenres(film: FilmBase, session: SessionDep):
 async def userFilms(user: UserWithToken, session: SessionDep):
     id = security.decodeToken(user.token)["id"]
     return await getUserFilms(session, id)
+
+
 
     

@@ -8,7 +8,7 @@ from passlib.hash import bcrypt
 def getHash(password: str):
     return bcrypt.hash(password)
 
-async def createUser(db: async_session, user: UserCreateSchema) -> User:
+async def createUser(db: async_session, user: UserCreateSchema):
     hashed_pw = getHash(user.password)
     db_user = User(username=user.username, password_hash=hashed_pw)
     db.add(db_user)
