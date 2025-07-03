@@ -6,7 +6,6 @@ from sqlalchemy import UUID
 
 
 class FilmStatusBase(BaseModel):
-    user_token: str
     film_id: int
 
 
