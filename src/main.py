@@ -15,4 +15,8 @@ app.include_router(recomend.router, prefix="/recomend", tags=["recomend"])
 
 
 if __name__ == "__main__":
-    uvicorn.run("src.main:app", reload = True)
+    uvicorn.run("src.main:app", 
+                reload = True, 
+                ssl_keyfile="ssl/key.pem", 
+                ssl_certfile="ssl/cert.pem"
+            )

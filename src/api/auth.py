@@ -1,5 +1,5 @@
-from fastapi import APIRouter, Depends
-from src.api.depends import SessionDep
+from fastapi import APIRouter
+from src.api.depends import SessionDep, oauth2
 from src.schemas.user import UserCreateSchema
 from src.db.crud.user import *
 from src.db.database import *

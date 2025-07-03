@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from src.api.depends import SessionDep
+from src.api.depends import SessionDep, TokenDep
 from src.db.crud.film import *
 from src.schemas.user import UserWithToken
 from src.core import security 
@@ -14,8 +14,8 @@ async def filmGenres(film: FilmBase, session: SessionDep):
 
 
 @router.post("/user_films")
-async def userFilms(user: UserWithToken, session: SessionDep):
-    id = security.decodeToken(user.token)["id"]
+async def userFilms(session: SessionDep, token: TokenDep):
+    id = security.decodeToken(token.credentials)["id"]
     return await getUserFilms(session, id)
 
 
