@@ -63,6 +63,7 @@ class FilmStatus(Base):
     status_id = Column(Integer, ForeignKey("status.id", ondelete="RESTRICT", onupdate="RESTRICT"))
     id = Column(Integer, primary_key=True, autoincrement=True)
     tv_id = Column(Integer, ForeignKey("tv.id", ondelete="RESTRICT", onupdate="RESTRICT"))
+    added_at = Column(TIMESTAMP, server_default=text("now()"))
 
     user = relationship("User", back_populates="film_statuses")
     film = relationship("Film", back_populates="statuses")

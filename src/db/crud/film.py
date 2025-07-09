@@ -20,6 +20,32 @@ async def getFilmGenre(db: async_session, film: FilmBase):
     return res.scalars().all()
 
 
+async def getUserFilms(db: async_session, userId: str):
+    statement = (
+        select(FilmStatus)
+        .where(FilmStatus.user_id == userId)
+        .order_by(FilmStatus.added_at)
+    )
+    res = await db.execute(statement)
+
+    filmStatuses = res.scalars().all()
+
+    res = []
+    for fs in filmStatuses:
+        item = None
+        if fs.film_id is not None:
+            item = { "content_id": fs.film_id, "content_type": "film" }
+        elif fs.tv_id is not None:
+            item = { "content_id": fs.tv_id, "content_type": "tv" }
+        if item:
+            item["user_score"] = fs.user_score if fs.user_score is not None else None
+            item["status_id"] = fs.status_id if fs.status_id is not None else None
+            res.append(item)
+    return res
+
+
+
+
 async def getUserFilmsByRate(db: async_session, userId: str):
     statement = (
         select(FilmStatus)
