@@ -1,5 +1,6 @@
 from sqlalchemy import *
-from src.models.models import Film, FilmGenre, FilmStatus, Genre
+from sqlalchemy.orm import selectinload
+from src.models.models import Film, FilmGenre, FilmStatus, Genre, TV, Actor, TVActor, FilmActor, TVGenre
 from src.schemas.film import FilmBase
 from sqlalchemy.ext.asyncio import async_session
 import src.core.security as sec
@@ -23,20 +24,57 @@ async def getUserFilms(db: async_session, userId: str):
     statement = (
         select(FilmStatus)
         .where(FilmStatus.user_id == userId)
+        .order_by(FilmStatus.added_at)
     )
     res = await db.execute(statement)
 
     filmStatuses = res.scalars().all()
 
-    return [
-        {
-            "film_id": fs.film_id if fs.film_id is not None else None,
-            "tv_id": fs.tv_id if fs.tv_id is not None else None,
-            "status_id": fs.status_id,
-            "user_score": float(fs.user_score) if fs.user_score is not None else None
-        }
-        for fs in filmStatuses
-    ]
+    res = []
+    for fs in filmStatuses:
+        item = None
+        if fs.film_id is not None:
+            item = { "content_id": fs.film_id, "content_type": "film" }
+        elif fs.tv_id is not None:
+            item = { "content_id": fs.tv_id, "content_type": "tv" }
+        if item:
+            item["user_score"] = fs.user_score if fs.user_score is not None else None
+            item["status_id"] = fs.status_id if fs.status_id is not None else None
+            res.append(item)
+    return res
+
+
+
+
+async def getUserFilmsByRate(db: async_session, userId: str):
+    statement = (
+        select(FilmStatus)
+        .where(FilmStatus.user_id == userId)
+    )
+    res = await db.execute(statement)
+
+    filmStatuses = res.scalars().all()
+
+    liked = []
+    disliked = []
+    unrated = []
+
+    for fs in filmStatuses:
+        item = None
+        if fs.film_id is not None:
+            item = (fs.film_id, "film")
+        elif fs.tv_id is not None:
+            item = (fs.tv_id, "tv")
+        if item:
+            if fs.status_id == 1:
+                liked.append(item)
+            elif fs.status_id == 2:
+                disliked.append(item)
+            elif fs.status_id == 3:
+                unrated.append(item)
+
+    return liked, disliked, unrated
+    
 
 
 async def getFilmStatus(db: async_session, user_id: str, film_id:int):
@@ -61,12 +99,12 @@ async def upsertContentStatus(
     content_id: int,
     status_id: int = None,
     user_score: float = None,
-    contentType: str = "film"
+    content_type: str = "film"
 ):
-    if contentType == "film":
+    if content_type == "film":
         existing = await getFilmStatus(db, user_id, content_id)
         kwargs = {"user_id": user_id, "film_id": content_id}
-    elif contentType == "tv":
+    elif content_type == "tv":
         existing = await getTvStatus(db, user_id, content_id)
         kwargs = {"user_id": user_id, "tv_id": content_id}
     else:
@@ -93,9 +131,100 @@ async def upsertContentStatus(
     return {"ok": True, "action": action}
 
 async def setContentUserStatus(db: async_session, user_id: str, film_id: int, status_id: int, contentType: str):
-    return await upsertContentStatus(db, user_id, film_id, status_id=status_id, contentType=contentType)
+    return await upsertContentStatus(db, user_id, film_id, status_id=status_id, content_type=contentType)
 
 async def setContentUserScore(db: async_session, user_id: str, film_id: int, user_score: float, contentType: str):
-    return await upsertContentStatus(db, user_id, film_id, user_score=user_score, contentType=contentType)
+    return await upsertContentStatus(db, user_id, film_id, user_score=user_score, content_type=contentType)
 
 
+async def getFilmAbout(db: async_session, film_id: int):
+    statement = select(Film).options(selectinload(Film.genres), selectinload(Film.director)).where(Film.id == film_id)
+    res = await db.execute(statement)
+    film = res.scalar_one_or_none()
+    if not film:
+        return None
+
+    genres = [genre.name for genre in film.genres]
+
+    actorStmt = (
+        select(Actor.id, Actor.name, Actor.character)
+        .select_from(Actor)
+        .join(FilmActor, FilmActor.actor_id == Actor.id)
+        .where(FilmActor.film_id == film_id)
+    )
+    actor_res = await db.execute(actorStmt)
+    actors = [
+        {"id": row[0], "name": row[1], "character": row[2]}
+        for row in actor_res.fetchall()
+    ]
+
+    filmInfo = {
+        "id": film.id,
+        "original_title": film.original_title,
+        "title": film.title,
+        "overview": film.overview,
+        "popularity": float(film.popularity) if film.popularity is not None else None,
+        "poster_path": film.poster_path,
+        "release_date": str(film.release_date) if film.release_date else None,
+        "vote_average": float(film.vote_average) if film.vote_average is not None else None,
+        "vote_count": film.vote_count,
+        "budget": film.budget,
+        "revenue": int(film.revenue) if film.revenue is not None else None,
+        "runtime": film.runtime,
+        "genres": genres,
+        "actors": actors,
+        "director": film.director.name,
+        "content_type": "film"
+    }
+    return filmInfo
+
+async def getTvAbout(db: async_session, tv_id: int):
+    statement = select(TV).where(TV.id == tv_id)
+    res = await db.execute(statement)
+    tv = res.scalar_one_or_none()
+    if not tv:
+        return None
+
+    genre_stmt = (
+        select(Genre.name)
+        .select_from(Genre)
+        .join(TVGenre, TVGenre.genre_id == Genre.id)
+        .where(TVGenre.tv_id == tv_id)
+    )
+    genre_res = await db.execute(genre_stmt)
+    genres = [row[0] for row in genre_res.fetchall()]
+
+    actorStmt = (
+        select(Actor.id, Actor.name, Actor.character)
+        .select_from(Actor)
+        .join(TVActor, TVActor.actor_id == Actor.id)
+        .where(TVActor.tv_id == tv_id)
+    )
+    actor_res = await db.execute(actorStmt)
+    actors = [
+        {"id": row[0], "name": row[1], "character": row[2]}
+        for row in actor_res.fetchall()
+    ]
+
+    tvInfo = {
+        "id": tv.id,
+        "original_name": tv.original_name,
+        "name": tv.name,
+        "overview": tv.overview,
+        "popularity": float(tv.popularity) if tv.popularity is not None else None,
+        "poster_path": tv.poster_path,
+        "first_air_date": str(tv.first_air_date) if tv.first_air_date else None,
+        "last_air_date": str(tv.last_air_date) if tv.last_air_date else None,
+        "vote_average": float(tv.vote_average) if tv.vote_average is not None else None,
+        "vote_count": tv.vote_count,
+        "status": tv.status,
+        "number_of_episodes": tv.number_of_episodes,
+        "number_of_seasons": tv.number_of_seasons,
+        "genres": genres,
+        "actors": actors,
+        "content_type": "tv"
+    }
+    return tvInfo
+
+async def getContentAbout(db: async_session, content_id: int, content_type: str):
+    return await getTvAbout(db, content_id) if content_type == "tv" else await getFilmAbout(db, content_id)

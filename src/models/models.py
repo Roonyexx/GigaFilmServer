@@ -63,6 +63,7 @@ class FilmStatus(Base):
     status_id = Column(Integer, ForeignKey("status.id", ondelete="RESTRICT", onupdate="RESTRICT"))
     id = Column(Integer, primary_key=True, autoincrement=True)
     tv_id = Column(Integer, ForeignKey("tv.id", ondelete="RESTRICT", onupdate="RESTRICT"))
+    added_at = Column(TIMESTAMP, server_default=text("now()"))
 
     user = relationship("User", back_populates="film_statuses")
     film = relationship("Film", back_populates="statuses")
@@ -79,7 +80,6 @@ class TV(Base):
     first_air_date = Column(Date, nullable=False)
     name = Column(Text, nullable=False)
     vote_count = Column(Integer, nullable=False, server_default=text("0"))
-    runtime = Column(Integer, nullable=False, server_default=text("0"))
     last_air_date = Column(Date)
     status = Column(Text)
     number_of_episodes = Column(Integer, nullable=False, server_default=text("0"))

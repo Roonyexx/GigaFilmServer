@@ -1,3 +1,6 @@
+import asyncio
+from fastapi import APIRouter
+from src.db.database import SessionLocal
 from fastapi import APIRouter, Query
 from src.api.depends import SessionDep, TokenDep
 from src.db.crud.film import *
@@ -17,7 +20,19 @@ async def filmGenres(film: FilmBase, session: SessionDep):
 @router.post("/user_films")
 async def userFilms(session: SessionDep, token: TokenDep):
     id = security.decodeToken(token.credentials)["id"]
-    return await getUserFilms(session, id)
+    filmsList = await getUserFilms(session, id)
+
+    async def get_content(user_content):
+        async with SessionLocal() as new_session:
+            content_data = await getContentAbout(new_session, user_content["content_id"], user_content["content_type"])
+            return {**user_content, **content_data}
+
+
+    result = await asyncio.gather(*[
+        get_content(content) for content in filmsList
+    ])
+
+    return result
 
 @router.get("/search", response_model=list[FilmOut])
 async def searchFilms(query: str = Query(..., min_length=1), session: SessionDep = None):
