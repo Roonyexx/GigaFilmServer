@@ -4,7 +4,6 @@ import numpy as np
 from sentence_transformers import SentenceTransformer
 import torch
 
-# Подключение к БД
 conn = psycopg2.connect(
     dbname="GigaFilm",
     user="postgres",
@@ -13,7 +12,6 @@ conn = psycopg2.connect(
     port="5432"
 )
 
-# Модель
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 model = SentenceTransformer('all-MiniLM-L6-v2', device=device)
 
