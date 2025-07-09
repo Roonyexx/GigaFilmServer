@@ -79,7 +79,6 @@ class TV(Base):
     first_air_date = Column(Date, nullable=False)
     name = Column(Text, nullable=False)
     vote_count = Column(Integer, nullable=False, server_default=text("0"))
-    runtime = Column(Integer, nullable=False, server_default=text("0"))
     last_air_date = Column(Date)
     status = Column(Text)
     number_of_episodes = Column(Integer, nullable=False, server_default=text("0"))

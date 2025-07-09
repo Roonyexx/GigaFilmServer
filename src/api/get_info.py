@@ -10,13 +10,13 @@ router = APIRouter()
 
 @router.post("/film_genres")
 async def filmGenres(film: FilmBase, session: SessionDep):
-    return await getFilmGenres(session, film)
+    return await getFilmGenre(session, film)
 
 
 @router.post("/user_films")
 async def userFilms(session: SessionDep, token: TokenDep):
     id = security.decodeToken(token.credentials)["id"]
-    return await getUserFilms(session, id)
+    return await getUserFilmsByRate(session, id)
 
 
 

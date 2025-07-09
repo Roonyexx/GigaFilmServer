@@ -8,7 +8,7 @@ import torch
 conn = psycopg2.connect(
     dbname="GigaFilm",
     user="postgres",
-    password="12345",
+    password="1",
     host="localhost",
     port="5432"
 )
@@ -30,7 +30,7 @@ query_content = """
     UNION ALL
     SELECT t.id, t.overview, NULL as director_name, 'tv' as content_type
     FROM tv t
-    WHERE t.vote_count > 50
+    WHERE t.vote_count > 10
 """
 
 content_df = pd.read_sql_query(query_content, conn)
@@ -92,9 +92,9 @@ for idx, row in content_df.iterrows():
         print(f"Обработано: {idx + 1}/{len(content_df)}")
 
 embeddings = np.array(embeddings)
-np.save('content_combined_embeddings.npy', embeddings)
+np.save('./set/content_combined_embeddings.npy', embeddings)
 
 pd.DataFrame({'id': content_ids,'content_type': content_types
-              }).to_csv('content_ids.csv', index=False)
+              }).to_csv('./set/content_ids.csv', index=False)
 
 print("Эмбеддинги фильмов и сериалов успешно сохранены.")
