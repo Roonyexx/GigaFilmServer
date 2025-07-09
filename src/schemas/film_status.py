@@ -5,18 +5,19 @@ from pydantic import BaseModel
 from sqlalchemy import UUID
 
 
-class FilmStatusBase(BaseModel):
-    film_id: int
+class ContentStatusBase(BaseModel):
+    content_id: int
+    content_type: str
 
 
-class FilmStatusSet(FilmStatusBase):
+class ContentStatusSet(ContentStatusBase):
     status_id: int
 
-class FilmScoreSet(FilmStatusBase):
+class ContentScoreSet(ContentStatusBase):
     user_score: float
 
 
-class FilmStatusRead(FilmStatusBase):
+class ContentStatusRead(ContentStatusBase):
     status_id: int
     user_id: str
     film_id: int

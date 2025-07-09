@@ -1,6 +1,5 @@
 from sqlalchemy import *
-from src.schemas.film_status import FilmStatusSet, FilmStatusRead
-from src.models.models import Film, FilmGenres, FilmStatus, Genre
+from src.models.models import Film, FilmGenre, FilmStatus, Genre
 from src.schemas.film import FilmBase
 from sqlalchemy.ext.asyncio import async_session
 import src.core.security as sec
@@ -8,11 +7,11 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from src.schemas.user import UserSchema
 
-async def getFilmGenres(db: async_session, film: FilmBase):
+async def getFilmGenre(db: async_session, film: FilmBase):
     statement = (
         select(Genre.name, Film.id)
-        .join(FilmGenres, Film.id == film.id)
-        .join(Genre, FilmGenres.genre_id == Genre.id)
+        .join(FilmGenre, Film.id == film.id)
+        .join(Genre, FilmGenre.genre_id == Genre.id)
         .where(Film.id == film.id)
     )
 
@@ -31,9 +30,10 @@ async def getUserFilms(db: async_session, userId: str):
 
     return [
         {
-            "film_id": fs.film_id,
+            "film_id": fs.film_id if fs.film_id is not None else None,
+            "tv_id": fs.tv_id if fs.tv_id is not None else None,
             "status_id": fs.status_id,
-            "user_score": float(fs.user_score) if fs.user_score is not None else None,
+            "user_score": float(fs.user_score) if fs.user_score is not None else None
         }
         for fs in filmStatuses
     ]
@@ -47,14 +47,31 @@ async def getFilmStatus(db: async_session, user_id: str, film_id:int):
     result = await db.execute(stmt)
     return result.scalar_one_or_none()
 
-async def upsertFilmStatus(
+async def getTvStatus(db: async_session, user_id: str, tv_id:int):
+    stmt = select(FilmStatus).where(
+        FilmStatus.user_id == user_id,
+        FilmStatus.tv_id == tv_id
+    )
+    result = await db.execute(stmt)
+    return result.scalar_one_or_none()
+
+async def upsertContentStatus(
     db: async_session,
     user_id: str,
-    film_id: int,
+    content_id: int,
     status_id: int = None,
-    user_score: float = None
+    user_score: float = None,
+    contentType: str = "film"
 ):
-    existing = await getFilmStatus(db, user_id, film_id)
+    if contentType == "film":
+        existing = await getFilmStatus(db, user_id, content_id)
+        kwargs = {"user_id": user_id, "film_id": content_id}
+    elif contentType == "tv":
+        existing = await getTvStatus(db, user_id, content_id)
+        kwargs = {"user_id": user_id, "tv_id": content_id}
+    else:
+        return {"ok": False, "exception": "Unknown contentType"}
+
     action = "updated"
     if existing:
         if status_id is not None:
@@ -63,8 +80,7 @@ async def upsertFilmStatus(
             existing.user_score = user_score
     else:
         new_status = FilmStatus(
-            user_id=user_id,
-            film_id=film_id,
+            **kwargs,
             status_id=status_id,
             user_score=user_score
         )
@@ -76,10 +92,10 @@ async def upsertFilmStatus(
         return {"ok": False, "exception": str(e)}
     return {"ok": True, "action": action}
 
-async def setFilmUserStatus(db: async_session, user_id: str, film_id: int, status_id: int):
-    return await upsertFilmStatus(db, user_id, film_id, status_id=status_id)
+async def setContentUserStatus(db: async_session, user_id: str, film_id: int, status_id: int, contentType: str):
+    return await upsertContentStatus(db, user_id, film_id, status_id=status_id, contentType=contentType)
 
-async def setFilmUserScore(db: async_session, user_id: str, film_id: int, user_score: float):
-    return await upsertFilmStatus(db, user_id, film_id, user_score=user_score)
+async def setContentUserScore(db: async_session, user_id: str, film_id: int, user_score: float, contentType: str):
+    return await upsertContentStatus(db, user_id, film_id, user_score=user_score, contentType=contentType)
 
 
