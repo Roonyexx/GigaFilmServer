@@ -5,13 +5,9 @@ from pydantic import BaseModel, ConfigDict, Field
 from src.schemas.genre import GenreRead
 
 
-class FilmBase(BaseModel):
+class ContentBase(BaseModel):
     id: int
-    score: Decimal
-
-class FilmRead(FilmBase):
-    genres: List[GenreRead] = []
-
+    content_type: str
 
 
 class FilmOut(BaseModel):

@@ -1,14 +1,14 @@
 from sqlalchemy import *
 from sqlalchemy.orm import selectinload
 from src.models.models import Film, FilmGenre, FilmStatus, Genre, TV, Actor, TVActor, FilmActor, TVGenre
-from src.schemas.film import FilmBase
+from src.schemas.film import ContentBase
 from sqlalchemy.ext.asyncio import async_session
 import src.core.security as sec
 from sqlalchemy.exc import SQLAlchemyError
 
 from src.schemas.user import UserSchema
 
-async def getFilmGenre(db: async_session, film: FilmBase):
+async def getFilmGenre(db: async_session, film: ContentBase):
     statement = (
         select(Genre.name, Film.id)
         .join(FilmGenre, Film.id == film.id)

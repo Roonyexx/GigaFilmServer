@@ -1,23 +1,23 @@
 import asyncio
-from fastapi import APIRouter
 from src.db.database import SessionLocal
 from fastapi import APIRouter, Query
 from src.api.depends import SessionDep, TokenDep
 from src.db.crud.film import *
-from src.schemas.film import FilmOut
+from src.schemas.film import ContentBase, FilmOut
 from src.schemas.user import UserWithToken
 from src.core import security 
+from src.core.parse import TMDBParser
 
 
 router = APIRouter()
 
 
 @router.post("/film_genres")
-async def filmGenres(film: FilmBase, session: SessionDep):
+async def filmGenres(film: ContentBase, session: SessionDep):
     return await getFilmGenre(session, film)
 
 
-@router.post("/user_films")
+@router.get("/user_films")
 async def userFilms(session: SessionDep, token: TokenDep):
     id = security.decodeToken(token.credentials)["id"]
     filmsList = await getUserFilms(session, id)
@@ -50,3 +50,10 @@ async def searchFilms(query: str = Query(..., min_length=1), session: SessionDep
     result = await session.execute(stmt)
     films = result.scalars().all()
     return films
+
+
+
+@router.post("/where_to_watch")
+async def whereToWatch(data: ContentBase):
+    parser = TMDBParser()
+    return parser.parse(data.id, data.content_type, "SE")

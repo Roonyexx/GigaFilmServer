@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 import uvicorn
+from src.core.parse import TMDBParser
 from src.api import auth
 from src.api import get_info
 from src.api import write_info
@@ -15,6 +16,7 @@ app.include_router(recommend.router, prefix="/recommend", tags=["recommend"])
 
 
 if __name__ == "__main__":
+    p = TMDBParser()
     uvicorn.run("src.main:app", 
                 reload = True, 
                 ssl_keyfile="ssl/key.pem", 
