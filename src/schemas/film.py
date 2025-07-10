@@ -4,6 +4,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from src.schemas.genre import GenreRead
 
+from datetime import date
 
 class FilmBase(BaseModel):
     id: int
@@ -14,11 +15,25 @@ class FilmRead(FilmBase):
 
 
 
+class ActorOut(BaseModel):
+    id: int
+    name: str
+
 class FilmOut(BaseModel):
     id: int
     title: str
-    description: str = Field(..., alias="overview")
-    imageUrl: str = Field(..., alias="poster_path")
-    type: str = "movie"
+    original_title: str
+    overview: Optional[str]
+    poster_path: Optional[str] = Field(None, alias="poster_path")
+    vote_average: float
+    vote_count: int
+    release_date: date
+    budget: int
+    revenue: int
+    runtime: int
+    content_type: str = "film"
 
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(
+        from_attributes=True,
+        populate_by_name=True
+    )
