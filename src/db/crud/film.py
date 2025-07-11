@@ -268,3 +268,18 @@ async def searchTV(query: str,db: async_session):
     for t in tvs:
         t.content_type = "tv"
     return tvs
+
+
+async def get_top_10(db: async_session):
+    top_films_q = select(Film).order_by(desc(Film.vote_count)).limit(10)
+    top_tvs_q = select(TV).order_by(desc(TV.vote_count)).limit(10)
+
+    films = (await db.execute(top_films_q)).scalars().all()
+    tvs = (await db.execute(top_tvs_q)).scalars().all()
+
+    combined = sorted(
+        [(f.id, 'film', f.vote_count) for f in films] +
+        [(tv.id, 'tv', tv.vote_count) for tv in tvs],
+        key=lambda x: x[0], reverse=True
+    )[:10]
+    return combined

@@ -3,9 +3,9 @@ import pandas as pd
 from sklearn.metrics.pairwise import cosine_similarity
 
 
-
 class ContentRecommender:
-    def __init__(self, embeddings_path="./src/recommend/set/content_combined_embeddings.npy", content_csv="./src/recommend/set/content_ids.csv"):
+    def __init__(self, embeddings_path="C:/Users/admin/PycharmProjects/GigaFilmServer/src/recommend/content_combined_embeddings.npy",
+                 content_csv="C:/Users/admin/PycharmProjects/GigaFilmServer/src/recommend/content_ids.csv"):
         self.embeddings = np.load(embeddings_path)
         self.content_df = pd.read_csv(content_csv)
 
@@ -27,9 +27,6 @@ class ContentRecommender:
             unrated = []
 
         liked_indexes = self.get_indexes(liked)
-        if not liked_indexes:
-            raise ValueError("Нет валидных понравившихся элементов среди загруженных")
-
         liked_embeddings = self.embeddings[liked_indexes]
         user_profile = liked_embeddings.mean(axis=0)
 
@@ -51,7 +48,7 @@ class ContentRecommender:
         top_recommendations = self.content_df.loc[top_indexes]
 
         result = [
-            {"content_id": row.id, "content_type": row.content_type}
+            (row.id, row.content_type)
             for row in top_recommendations.itertuples()
         ]
         return result
