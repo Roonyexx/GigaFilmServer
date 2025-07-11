@@ -34,6 +34,9 @@ class Film(Base):
     genres = relationship("Genre", secondary="film_genre", back_populates="films")
     director = relationship("Director", back_populates="films")
 
+    actors = relationship("Actor", secondary="film_actor", back_populates="films")
+
+
 class Genre(Base):
     __tablename__ = "genre"
 
@@ -41,6 +44,7 @@ class Genre(Base):
     name = Column(String(30), nullable=False)
 
     films = relationship("Film", secondary="film_genre", back_populates="genres")
+    tvs = relationship("TV", secondary="tv_genre", back_populates="genres")
 
 class Status(Base):
     __tablename__ = "status"
@@ -85,6 +89,10 @@ class TV(Base):
     number_of_episodes = Column(Integer, nullable=False, server_default=text("0"))
     number_of_seasons = Column(Integer, nullable=False, server_default=text("0"))
 
+    genres = relationship("Genre", secondary="tv_genre", back_populates="tvs")
+    actors = relationship("Actor", secondary="tv_actor", back_populates="tvs")
+
+
 class TVGenre(Base):
     __tablename__ = "tv_genre"
 
@@ -97,6 +105,9 @@ class Actor(Base):
     id = Column(Integer, primary_key=True, nullable=False)
     name = Column(Text, nullable=False)
     character = Column(Text)
+
+    films = relationship("Film", secondary="film_actor", back_populates="actors")
+    tvs = relationship("TV", secondary="tv_actor", back_populates="actors")
 
 class FilmActor(Base):
     __tablename__ = "film_actor"

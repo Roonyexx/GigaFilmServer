@@ -1,5 +1,5 @@
 from sqlalchemy import *
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import selectinload, Query
 from src.models.models import Film, FilmGenre, FilmStatus, Genre, TV, Actor, TVActor, FilmActor, TVGenre
 from src.schemas.film import ContentBase
 from sqlalchemy.ext.asyncio import async_session
@@ -228,3 +228,50 @@ async def getTvAbout(db: async_session, tv_id: int):
 
 async def getContentAbout(db: async_session, content_id: int, content_type: str):
     return await getTvAbout(db, content_id) if content_type == "tv" else await getFilmAbout(db, content_id)
+
+async def searchMovie(query: str,db: async_session):
+    film_stmt = (
+        select(Film)
+        .options(
+            selectinload(Film.genres),
+            selectinload(Film.actors)
+        )
+        .where(
+            or_(
+                Film.title.ilike(f"%{query}%"),
+                Film.original_title.ilike(f"%{query}%")
+            )
+        )
+        .order_by(desc(Film.vote_count))
+        .limit(20)
+    )
+    film_result = await db.execute(film_stmt)
+    films = film_result.scalars().all()
+
+    for f in films:
+        f.content_type = "film"
+    return films
+
+
+async def searchTV(query: str,db: async_session):
+    tv_stmt = (
+        select(TV)
+        .options(
+            selectinload(TV.genres),
+            selectinload(TV.actors)
+        )
+        .where(
+            or_(
+                TV.name.ilike(f"%{query}%"),
+                TV.original_name.ilike(f"%{query}%")
+            )
+        )
+        .order_by(desc(TV.vote_count))
+        .limit(20)
+    )
+    tv_result = await db.execute(tv_stmt)
+    tvs = tv_result.scalars().all()
+
+    for t in tvs:
+        t.content_type = "tv"
+    return tvs
