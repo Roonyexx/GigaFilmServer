@@ -1,13 +1,12 @@
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support import expected_conditions as EC
 from bs4 import BeautifulSoup
 
 class TMDBParser:
-    instance = None  # хранение синглтона
+    instance = None
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls):
         if not cls.instance:
             cls.instance = super(TMDBParser, cls).__new__(cls)
         return cls.instance
@@ -18,8 +17,6 @@ class TMDBParser:
 
         self.options = Options()
         self.init_driver()
-        self.driver = webdriver.Chrome(options=self.options)
-
         self.initialized = True
 
     def init_driver(self):
@@ -37,6 +34,7 @@ class TMDBParser:
             "profile.managed_default_content_settings.media_stream": 2,
         }
         self.options.add_experimental_option("prefs", prefs)
+        self.driver = webdriver.Chrome(options=self.options)
 
     def parse(self, content_id: int, content_type: str, locale: str = "RU"):
         content_type = "movie" if content_type == "film" else content_type
@@ -75,5 +73,5 @@ class TMDBParser:
 
     def quit(self):
         self.driver.quit()
-        TMDBParser._instance = None
-        self._initialized = False
+        TMDBParser.instance = None
+        self.initialized = False

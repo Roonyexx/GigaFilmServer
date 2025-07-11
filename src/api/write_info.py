@@ -10,7 +10,6 @@ router = APIRouter()
 
 @router.post("/content_status")
 async def filmStatus(data: ContentStatusSet, session: SessionDep, token: TokenDep):
-    print(token.credentials)
     user_id = sec.decodeToken(token.credentials)["id"]
     return await setContentUserStatus(session, user_id, data.content_id, data.status_id, data.content_type) 
 
