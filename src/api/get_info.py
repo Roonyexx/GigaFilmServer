@@ -4,7 +4,7 @@ from src.db.database import SessionLocal
 from fastapi import APIRouter, Query
 from src.api.depends import SessionDep, TokenDep
 from src.db.crud.film import *
-from src.schemas.film import FilmOut, TVOut, ContentBase
+from src.schemas.film import ContentBase
 from src.schemas.user import UserWithToken
 from src.core import security
 from src.core.parse import TMDBParser
@@ -14,7 +14,7 @@ router = APIRouter()
 
 
 @router.post("/film_genres")
-async def filmGenres(film: FilmBase, session: SessionDep):
+async def filmGenres(film: ContentBase, session: SessionDep):
     return await getFilmGenre(session, film)
 
 

@@ -23,8 +23,8 @@ async def getFilmGenre(db: async_session, film: ContentBase):
 async def getUserFilms(db: async_session, userId: str):
     statement = (
         select(FilmStatus)
-        .where(FilmStatus.user_id == userId)
-        .order_by(FilmStatus.added_at)
+        .where(and_(FilmStatus.user_id == userId, FilmStatus.status_id != 3))
+        .order_by(desc(FilmStatus.added_at))
     )
     res = await db.execute(statement)
 
@@ -171,28 +171,21 @@ async def getFilmAbout(db: async_session, film_id: int):
         "budget": film.budget,
         "revenue": int(film.revenue) if film.revenue is not None else None,
         "runtime": film.runtime,
-        "genres": genres,
+        "genres": film.genres,
         "actors": actors,
-        "director": film.director.name,
+        "director": film.director,
         "content_type": "film"
     }
     return filmInfo
 
 async def getTvAbout(db: async_session, tv_id: int):
-    statement = select(TV).where(TV.id == tv_id)
+    statement = select(TV).options(selectinload(TV.genres)).where(TV.id == tv_id)
     res = await db.execute(statement)
     tv = res.scalar_one_or_none()
     if not tv:
         return None
 
-    genre_stmt = (
-        select(Genre.name)
-        .select_from(Genre)
-        .join(TVGenre, TVGenre.genre_id == Genre.id)
-        .where(TVGenre.tv_id == tv_id)
-    )
-    genre_res = await db.execute(genre_stmt)
-    genres = [row[0] for row in genre_res.fetchall()]
+    #genres = [row[0] for row in genre_res.fetchall()]
 
     actorStmt = (
         select(Actor.id, Actor.name, Actor.character)
@@ -220,7 +213,7 @@ async def getTvAbout(db: async_session, tv_id: int):
         "status": tv.status,
         "number_of_episodes": tv.number_of_episodes,
         "number_of_seasons": tv.number_of_seasons,
-        "genres": genres,
+        "genres": tv.genres,
         "actors": actors,
         "content_type": "tv"
     }
