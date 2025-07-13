@@ -19,7 +19,7 @@ async def newFilms(session: SessionDep, token: TokenDep):
     id = sec.decodeToken(token.credentials)["id"]
     liked, disliked, unrated = await db.getUserFilmsByRate(session, id)
 
-    if len(unrated) > 4:
+    if len(unrated) > 5:
         rec = unrated
     elif not liked and not disliked:
         rec = await get_top_10(session)

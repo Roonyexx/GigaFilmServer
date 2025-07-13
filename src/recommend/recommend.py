@@ -4,8 +4,8 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 
 class ContentRecommender:
-    def __init__(self, embeddings_path="C:/Users/admin/PycharmProjects/GigaFilmServer/src/recommend/content_combined_embeddings.npy",
-                 content_csv="C:/Users/admin/PycharmProjects/GigaFilmServer/src/recommend/content_ids.csv"):
+    def __init__(self, embeddings_path="./src/recommend/set/content_combined_embeddings.npy",
+                 content_csv="./src/recommend/set/content_ids.csv"):
         self.embeddings = np.load(embeddings_path)
         self.content_df = pd.read_csv(content_csv)
 

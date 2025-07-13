@@ -1,5 +1,5 @@
 import asyncio
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from src.db.database import SessionLocal
 from fastapi import APIRouter, Query
 from src.api.depends import SessionDep, TokenDep
@@ -42,7 +42,6 @@ async def searchFilms(query: str, session: SessionDep = None):
     tvs = await searchTV(query,session)
 
     combined = sorted(films + tvs, key=lambda item: item.vote_count, reverse=True)
-
     return combined[:20]
 
 @router.post("/where_to_watch")
