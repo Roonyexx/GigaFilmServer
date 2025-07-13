@@ -36,10 +36,12 @@ async def userFilms(session: SessionDep, token: TokenDep):
     return result
 
 @router.get("/search")
-async def searchFilms(query: str, session: SessionDep = None):
+async def searchFilms(query: str, session: SessionDep, token: TokenDep):
 
-    films = await searchMovie(query,session)
-    tvs = await searchTV(query,session)
+    id = security.decodeToken(token.credentials)["id"]
+
+    films = await searchMovie(query,session,id)
+    tvs = await searchTV(query,session,id)
 
     combined = sorted(films + tvs, key=lambda item: item.vote_count, reverse=True)
 
