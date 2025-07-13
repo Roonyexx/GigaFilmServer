@@ -44,12 +44,11 @@ async def getUserFilms(db: async_session, userId: str):
     return res
 
 
-
-
 async def getUserFilmsByRate(db: async_session, userId: str):
     statement = (
         select(FilmStatus)
         .where(FilmStatus.user_id == userId)
+        .order_by(desc(FilmStatus.added_at))
     )
     res = await db.execute(statement)
 
@@ -222,9 +221,16 @@ async def getTvAbout(db: async_session, tv_id: int):
 async def getContentAbout(db: async_session, content_id: int, content_type: str):
     return await getTvAbout(db, content_id) if content_type == "tv" else await getFilmAbout(db, content_id)
 
-async def searchMovie(query: str,db: async_session):
+async def searchMovie(query: str,db: async_session, id: int):
     film_stmt = (
-        select(Film)
+        select(Film, FilmStatus.user_score, FilmStatus.status_id)
+        .outerjoin(
+            FilmStatus,
+            and_(
+                FilmStatus.film_id == Film.id,
+                FilmStatus.user_id == id
+            )
+        )
         .options(
             selectinload(Film.genres),
             selectinload(Film.actors)
@@ -239,16 +245,27 @@ async def searchMovie(query: str,db: async_session):
         .limit(20)
     )
     film_result = await db.execute(film_stmt)
-    films = film_result.scalars().all()
+    rows = film_result.all()
 
-    for f in films:
-        f.content_type = "film"
+    films = []
+    for film, user_score, status_id in rows:
+        film.content_type = "film"
+        film.user_score = user_score
+        film.status_id = status_id
+        films.append(film)
     return films
 
 
-async def searchTV(query: str,db: async_session):
+async def searchTV(query: str,db: async_session, id: int):
     tv_stmt = (
-        select(TV)
+        select(TV, FilmStatus.user_score, FilmStatus.status_id)
+        .outerjoin(
+            FilmStatus,
+            and_(
+                FilmStatus.tv_id == TV.id,
+                FilmStatus.user_id == id
+            )
+        )
         .options(
             selectinload(TV.genres),
             selectinload(TV.actors)
@@ -263,10 +280,14 @@ async def searchTV(query: str,db: async_session):
         .limit(20)
     )
     tv_result = await db.execute(tv_stmt)
-    tvs = tv_result.scalars().all()
+    rows = tv_result.all()
 
-    for t in tvs:
-        t.content_type = "tv"
+    tvs = []
+    for tv, user_score, status_id in rows:
+        tv.content_type = "tv"
+        tv.user_score = user_score
+        tv.status_id = status_id
+        tvs.append(tv)
     return tvs
 
 
