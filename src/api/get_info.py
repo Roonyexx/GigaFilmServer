@@ -49,4 +49,6 @@ async def searchFilms(query: str, session: SessionDep, token: TokenDep):
 @router.post("/where_to_watch")
 async def whereToWatch(data: ContentBase):
     parser = TMDBParser()
-    return parser.parse(data.id, data.content_type, "SE")
+    rureq = parser.parse(data.id, data.content_type, "RU")
+    usreq = parser.parse(data.id, data.content_type, "US")
+    return rureq + usreq

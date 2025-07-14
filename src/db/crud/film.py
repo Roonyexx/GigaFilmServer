@@ -184,7 +184,6 @@ async def getTvAbout(db: async_session, tv_id: int):
     if not tv:
         return None
 
-    #genres = [row[0] for row in genre_res.fetchall()]
 
     actorStmt = (
         select(Actor.id, Actor.name, Actor.character)
